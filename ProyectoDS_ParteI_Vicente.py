@@ -1,76 +1,87 @@
-# Importar las librerías necesarias
+# Importar librerías
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Simulamos el dataset cargado con los nombres corregidos para asegurarnos de que funcione
+# Simulación del dataset con las columnas relevantes
 data = {
-    'Hours_Studied': [23, 19, 24, 29, 19],
-    'Attendance': [84, 64, 98, 89, 92],
-    'Parental_Involvement': ['Low', 'Low', 'Medium', 'Low', 'Medium'],
-    'Access_to_Resources': ['High', 'Medium', 'Medium', 'Medium', 'Medium'],
-    'Extracurricular_Activities': ['No', 'No', 'Yes', 'Yes', 'Yes'],
-    'Learning_Disabilities': ['No', 'No', 'No', 'No', 'No'],
-    'Parental_Education_Level': ['High School', 'College', 'Postgraduate', 'High School', 'College'],
-    'Distance_from_Home': ['Near', 'Moderate', 'Near', 'Moderate', 'Near'],
-    'Gender': ['Male', 'Female', 'Male', 'Male', 'Female'],
-    'Exam_Score': [67, 61, 74, 71, 70]
+    'nivel_educativo_padres': ['Postgrado', 'Secundaria', 'Primaria', 'Postgrado', 'Secundaria'],
+    'ingresos_familiares': ['50000', '35000', '80000', '45000', '60000'],
+    'horas_estudio': ['4', '2', '5', '3', '6'],
+    'Exam_Score': [85, 70, 90, 75, 88],
+    'participacion_extracurricular': ['Si', 'No', 'Si', 'No', 'Si']  # Factor hipotético agregado
 }
 
-# Convertir el dataset en un DataFrame
+# Crear DataFrame
 df = pd.DataFrame(data)
 
-# **Mejora en la generación de gráficos con descripciones**
+# Convertir 'ingresos_familiares' y 'horas_estudio' a numéricos
+df['ingresos_familiares'] = pd.to_numeric(df['ingresos_familiares'], errors='coerce')
+df['horas_estudio'] = pd.to_numeric(df['horas_estudio'], errors='coerce')
 
-# 1. Distribución de calificaciones con más detalles
+# Crear columnas dummy para 'nivel_educativo_padres' y 'participacion_extracurricular'
+df_dummies = pd.get_dummies(df[['nivel_educativo_padres', 'participacion_extracurricular']], drop_first=True)
+
+# Concatenar las dummies con el DataFrame original
+df = pd.concat([df, df_dummies], axis=1)
+
+# ** Gráfico 1: Relación entre el Nivel Educativo de los Padres y la Calificación **
 plt.figure(figsize=(8, 6))
-sns.histplot(df['Exam_Score'], kde=True, color='blue')
-plt.title('Distribución de Calificaciones', fontsize=14, fontweight='bold')
-plt.xlabel('Calificación (Puntuación en el examen)', fontsize=12)
-plt.ylabel('Frecuencia de estudiantes', fontsize=12)
+sns.boxplot(x='nivel_educativo_padres', y='Exam_Score', data=df, hue='nivel_educativo_padres', palette='Set3', dodge=False)
+plt.title('Calificación según Nivel Educativo de los Padres', fontsize=14, fontweight='bold')
+plt.xlabel('Nivel Educativo de los Padres')
+plt.ylabel('Calificación en el Examen')
 plt.grid(True, linestyle='--', alpha=0.7)
-plt.xticks(fontsize=10)
-plt.yticks(fontsize=10)
 plt.tight_layout()
 plt.show()
 
-# **Descripción y conclusión del gráfico 1**
-# Este gráfico muestra la distribución de las calificaciones de los estudiantes en el examen.
-# A partir del gráfico, podemos observar que la mayoría de los estudiantes obtienen calificaciones en el rango de 60 a 75,
-# lo que indica una tendencia hacia calificaciones moderadas, con pocos estudiantes alcanzando puntajes extremos (muy altos o muy bajos).
-
-# 2. Mapa de calor de la correlación con más información
-correlacion = df[['Hours_Studied', 'Attendance', 'Exam_Score']].corr()
+# ** Gráfico 2: Relación entre el Nivel Educativo de los Padres y la Calificación (Regresión) **
 plt.figure(figsize=(8, 6))
-sns.heatmap(correlacion, annot=True, cmap='coolwarm', linewidths=0.5, fmt=".2f")
-plt.title('Mapa de Calor de la Correlación entre Variables', fontsize=14, fontweight='bold')
-plt.xticks(rotation=45, fontsize=12)
-plt.yticks(fontsize=12)
-plt.tight_layout()
-plt.show()
-
-# **Descripción y conclusión del gráfico 2**
-# El mapa de calor muestra la correlación entre las horas de estudio, la asistencia y las calificaciones en el examen.
-# Se observa una correlación positiva entre las horas de estudio y las calificaciones (0.65), lo que sugiere que a más horas dedicadas al estudio,
-# mejor es el rendimiento en el examen. También se observa una correlación positiva moderada entre la asistencia y las calificaciones (0.46).
-# Esto indica que tanto estudiar más como asistir con mayor frecuencia a clases están asociados con mejores calificaciones.
-
-# 3. Gráfico de dispersión mejorado: Relación entre horas de estudio y rendimiento académico
-plt.figure(figsize=(10, 6))
-sns.scatterplot(x='Hours_Studied', y='Exam_Score', hue='Attendance', data=df, palette='Set2', s=100, edgecolor='black')
-plt.title('Relación entre Horas de Estudio y Rendimiento Académico', fontsize=14, fontweight='bold')
-plt.xlabel('Horas de Estudio Diarias', fontsize=12)
-plt.ylabel('Calificación en el Examen', fontsize=12)
-plt.legend(title='Asistencia (%)', fontsize=10, title_fontsize=12)
+sns.regplot(x='ingresos_familiares', y='Exam_Score', data=df, scatter_kws={"s": 100}, line_kws={"color": "red"})
+plt.title('Relación entre Ingresos Familiares y Calificación', fontsize=14, fontweight='bold')
+plt.xlabel('Ingresos Familiares')
+plt.ylabel('Calificación en el Examen')
 plt.grid(True, linestyle='--', alpha=0.7)
-plt.xticks(fontsize=10)
-plt.yticks(fontsize=10)
 plt.tight_layout()
 plt.show()
 
-# **Descripción y conclusión del gráfico 3**
-# El gráfico de dispersión visualiza la relación entre las horas de estudio y el rendimiento en el examen, coloreado según el nivel de asistencia.
-# A partir del gráfico, podemos ver que, en general, los estudiantes que dedican más horas al estudio tienden a obtener mejores calificaciones,
-# y aquellos con mayor asistencia suelen estar en el rango superior de las calificaciones. Esto refuerza la conclusión de que tanto las horas de estudio como la asistencia
-# influyen positivamente en el rendimiento académico.
+# ** Gráfico 3: Relación entre Horas de Estudio y Calificación **
+plt.figure(figsize=(8, 6))
+sns.regplot(x='horas_estudio', y='Exam_Score', data=df, scatter_kws={"s": 100}, line_kws={"color": "green"})
+plt.title('Relación entre Horas de Estudio y Calificación', fontsize=14, fontweight='bold')
+plt.xlabel('Horas de Estudio Diarias')
+plt.ylabel('Calificación en el Examen')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
 
+# ** Gráfico 4: Relación entre Horas de Estudio y Calificación, agrupado por el Nivel Educativo de los Padres **
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x='horas_estudio', y='Exam_Score', hue='nivel_educativo_padres', data=df, s=100, edgecolor='black')
+plt.title('Relación entre Horas de Estudio y Calificación agrupado por Nivel Educativo de los Padres', fontsize=14, fontweight='bold')
+plt.xlabel('Horas de Estudio Diarias')
+plt.ylabel('Calificación en el Examen')
+plt.legend(title='Nivel Educativo de los Padres', fontsize=10, title_fontsize=12)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+# ** Gráfico 5: Relación entre Participación Extracurricular y Calificación **
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='participacion_extracurricular_Si', y='Exam_Score', data=df, hue='participacion_extracurricular_Si', palette='Set1', dodge=False)
+plt.title('Participación Extracurricular y Calificación', fontsize=14, fontweight='bold')
+plt.xlabel('Participación Extracurricular (Sí = 1, No = 0)')
+plt.ylabel('Calificación en el Examen')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+# ** Gráfico 6: Relación entre Ingresos Familiares y Calificación (con Regresión) **
+plt.figure(figsize=(8, 6))
+sns.regplot(x='ingresos_familiares', y='Exam_Score', data=df, scatter_kws={"s": 100}, line_kws={"color": "blue"})
+plt.title('Ingresos Familiares vs Calificación con Regresión', fontsize=14, fontweight='bold')
+plt.xlabel('Ingresos Familiares')
+plt.ylabel('Calificación en el Examen')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
